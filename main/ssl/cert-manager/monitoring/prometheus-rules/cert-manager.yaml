@@ -1,0 +1,50 @@
+- alert: CertManagerAbsent
+  expr: absent(up{job="cert-manager"})
+  for: 1h
+  annotations:
+    message: "Cert Manager has dissapeared from Prometheus service discovery."
+  labels:
+    severity: critical
+    cluster: "${project_name}"
+- alert: CertManagerACMEProxyReachability
+  expr: |
+    sum by (host, status, method) (
+      rate(certmanager_http_acme_client_request_count{status!~"2.."}[1h])
+    ) > 0
+  for: 4h
+  annotations:
+    message: "Cert manager did not receive a successful response from the ACME proxy."
+  labels:
+    severity: warning
+    cluster: "${project_name}"
+- alert: CertManagerCertExpireSoon
+  expr: |
+    sum without (exported_namespace)(
+      label_replace (
+        avg by (exported_namespace, name) (
+          certmanager_certificate_expiration_timestamp_seconds - time() < (31 * 24 * 3600) unless ON(name, namespace) 
+            certmanager_certificate_ready_status{condition!="True"} == 1),
+          "namespace", "$1", "exported_namespace", "(.+)"
+      )
+    )
+  for: 24h
+  annotations:
+    message: "The cert {{ $labels.name }} is {{ $value | humanizeDuration }} from expiry."
+  labels:
+    severity: info
+    cluster: "${project_name}"
+- alert: CertManagerCertNotReady
+  expr: |
+    sum without (exported_namespace)(
+      label_replace(
+        max by (name, exported_namespace, condition, namespace) (
+          certmanager_certificate_ready_status{condition!="True"} == 1
+        ), "namespace", "$1", "exported_namespace", "(.+)"
+      )
+    )
+  for: 24h
+  annotations:
+    message: "The cert {{ $labels.name }} is not ready to serve traffic."
+  labels:
+    severity: warning
+    cluster: "${project_name}"

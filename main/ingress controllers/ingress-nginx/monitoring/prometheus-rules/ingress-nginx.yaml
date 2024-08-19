@@ -1,0 +1,30 @@
+- alert: IngressNginxConfigReloadFailed
+  expr: nginx_ingress_controller_config_last_reload_successful != 1
+  for: 5m
+  labels:
+    severity: critical
+    type: ingress-nginx
+    cluster: "${project_name}"
+  annotations:
+    summary: "Ingress Nginx config reload failed (controller {{ $labels.controller_class }}, pod {{ $labels.controller_pod }})"
+    description: "Check pod {{ $labels.controller_pod }} logs in namespace {{ $labels.controller_namespace }}"
+- alert: IngressNginxLeaderElectionFailed
+  expr: nginx_ingress_controller_leader_election_status != 1
+  for: 5m
+  labels:
+    severity: critical
+    type: ingress-nginx
+    cluster: "${project_name}"
+  annotations:
+    summary: "Ingress Nginx leader election failed (controller {{ $labels.controller_class }})"
+    description: "Check pod logs in namespace {{ $labels.controller_namespace }}"
+- alert: SiteBadSuccessRate
+  expr: sum(rate(nginx_ingress_controller_requests{controller_pod=~".*",controller_class=~"k8s.io/ingress-nginx",namespace=~".*",exported_namespace=~".*-prod",ingress=~".*",status!~"[5].*"}[2m])) by (ingress) / sum(rate(nginx_ingress_controller_requests{controller_pod=~".*",controller_class=~"k8s.io/ingress-nginx",namespace=~".*",exported_namespace=~".*-prod",ingress=~".*"}[2m])) by (ingress) < 0.90
+  for: 15m
+  labels:
+    severity: critical
+    type: site
+    cluster: "${project_name}"
+  annotations:
+    summary: "Site {{ $labels.ingress }} bad success rate"
+    description: "Number of successful requests less than 90%. Check nginx/python logs."

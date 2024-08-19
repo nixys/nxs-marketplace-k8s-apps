@@ -1,0 +1,9 @@
+- alert: GitlabRunnerError
+  expr: gitlab_runner_errors_total > 0
+  for: 15m
+  labels:
+    severity: critical
+    cluster: "${project_name}"
+  annotations:
+    description: Gitlab-runner pod {{ $labels.pod }} had errors {{ "{{ $value }}" }}.
+    summary: Please check gitlab-runner.
