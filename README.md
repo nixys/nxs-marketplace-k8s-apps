@@ -45,6 +45,12 @@ The available variables are listed in each modules's README file, along with the
 
 </details>
 
+<details><summary>monitoring</summary>
+
+1. [kube-prometheus-stack](https://github.com/nixys/nxs-marketplace-k8s-apps/blob/main/monitoring/kube-prometheus-stack/README.md) - create resources for kube-prometheus-stack
+
+</details>
+
 ## Roadmap
 
 Following features are already in backlog for our development team and will be released soon:
